@@ -13,7 +13,10 @@ func main() {
 	printLocalIP()
 	http.HandleFunc("/", index)
 	http.HandleFunc("/upload", upload)
-	http.ListenAndServe(":80", nil)
+	err := http.ListenAndServe(":80", nil)
+	if err != nil {
+		fmt.Println(err)
+	}
 }
 
 func upload(w http.ResponseWriter, r *http.Request) {
@@ -35,26 +38,30 @@ func upload(w http.ResponseWriter, r *http.Request) {
 	}
 	wd, _ := os.Getwd()
 	var dirName = wd + sep + filePath + sep
-	fmt.Println("文件目录为" + dirName)
+	fmt.Print("上传文件目录为" + dirName + ",")
 	_, err = os.Stat(dirName)
 	if err != nil {
 		if os.IsNotExist(err) {
+			fmt.Print("目录不存在")
 			os.Mkdir(dirName, os.ModePerm)
-			fmt.Println("创建成功" + dirName)
+			fmt.Print("目录创建成功")
+		} else {
+			fmt.Println(err)
 		}
+
 	}
-	f1, err := os.OpenFile(dirName+handler.Filename, os.O_WRONLY|os.O_CREATE, 0666)
+	fileName := dirName + handler.Filename
+	f1, err := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE, 0666)
 	if err != nil {
 		fmt.Println("打开文件失败")
 	}
-
 	defer f1.Close()
 	io.Copy(f1, file)
-	fmt.Fprintln(w, "upload ok!")
+	fmt.Println("上传文件" + fileName + "成功")
+	fmt.Fprintln(w, "上传成功")
 }
 
 func index(w http.ResponseWriter, r *http.Request) {
-
 	w.Write([]byte(tpl))
 }
 
