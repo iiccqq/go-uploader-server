@@ -3,14 +3,17 @@ package main
 import (
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"os"
 )
 
 func main() {
+	fmt.Println("本地ip有以下，请在手机端设置对应的ip，确保电脑80端口开放及没有被占用")
+	printLocalIP()
 	http.HandleFunc("/", index)
 	http.HandleFunc("/upload", upload)
-	http.ListenAndServe(":8080", nil)
+	http.ListenAndServe(":80", nil)
 }
 
 func upload(w http.ResponseWriter, r *http.Request) {
@@ -51,7 +54,25 @@ func upload(w http.ResponseWriter, r *http.Request) {
 }
 
 func index(w http.ResponseWriter, r *http.Request) {
+
 	w.Write([]byte(tpl))
+}
+
+func printLocalIP() {
+	addrs, err := net.InterfaceAddrs()
+
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	for _, address := range addrs {
+		if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+			if ipnet.IP.To4() != nil {
+				fmt.Println(ipnet.IP.String())
+			}
+		}
+	}
 }
 
 const tpl = `<html>
